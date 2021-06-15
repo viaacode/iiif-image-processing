@@ -1,0 +1,14 @@
+viaa:
+    logging:
+        level: DEBUG
+app:
+    mediahaven: 
+        host: !ENV ${MEDIAHAVEN_HOST}
+        username: !ENV ${MEDIAHAVEN_USERNAME}
+        password: !ENV ${MEDIAHAVEN_PASSWORD}
+        export_location_id: !ENV ${MEDIAHAVEN_EXPORT_LOCATION_ID}
+    kakadu:
+        bin: !ENV ${KAKADU_BIN}
+    transform:
+        path: !ENV ${TRANSFORM_PATH}
+
