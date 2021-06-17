@@ -1,6 +1,6 @@
 requests==2.25.1
 scikit-image==0.18.1
-viaa-chassis==0.2.0rc1
+# viaa-chassis==0.2.0rc1
 
 ############################
 # Colorchecker requirements
@@ -14,7 +14,7 @@ Pillow
 PyYAML>=5.3.1
 scipy>=1.4.1
 torch==1.8.1
-torchvision>=0.8.1
+torchvision==0.9.1
 tqdm>=4.41.0
 
 # logging -------------------------------------
