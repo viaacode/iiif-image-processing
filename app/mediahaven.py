@@ -3,10 +3,10 @@
 
 # External imports
 import functools
-import urllib
 import requests
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import RequestException
+import urllib
 from viaa.configuration import ConfigParser
 
 config = ConfigParser()
@@ -38,7 +38,8 @@ class MediahavenClient:
         return wrapper_authenticate
 
     def __get_token(self) -> str:
-        """Gets an OAuth token that can be used in mediahaven requests to authenticate."""
+        """Gets an OAuth token that can be used in mediahaven requests to
+        authenticate."""
         username: str = self.config["mediahaven"]["username"]
         password: str = self.config["mediahaven"]["password"]
         url: str = self.url + "/oauth/access_token"
@@ -142,3 +143,29 @@ class MediahavenClient:
 
         except Exception as exception:
             print(f"Error exporting essence with for pid {pid}: {str(exception)}")
+
+    @__authenticate
+    def get_metadata(self, media_object_id):
+        """
+        Get metadata for a file, using the file's media_object_id
+        """
+
+        url = self.url + "/media/" + media_object_id
+
+        try:
+            headers = self._construct_headers()
+            response = requests.get(url, headers=headers)
+            response_json = response.json()
+
+            if "status" in response_json and response_json["status"] == 400:
+                raise Exception(
+                    f"No metadata found for media_object_id {media_object_id}"
+                )
+
+            return response_json
+
+        except Exception as exception:
+            print(
+                f"Error getting metadata for media_object_id {media_object_id}: \
+                {str(exception)}"
+            )

@@ -12,13 +12,15 @@ class Kakadu:
     def __init__(self, kakadu_base_path):
         """
         Params:
-            kakadu_base_path: The location of the kdu_compress and kdu_expand executables
+            kakadu_base_path: The location of the kdu_compress and kdu_expand
+            executables
         """
         self.kakadu_base_path = kakadu_base_path
 
         if not cmd_is_executable(self._command_path("kdu_compress")):
             raise OSError(
-                "Could not find executable {0}. Check kakadu is installed and kdu_compress exists at the configured \
+                "Could not find executable {0}. Check kakadu is installed and \
+                kdu_compress exists at the configured \
                 path".format(
                     self._command_path("kdu_compress")
                 )
@@ -29,7 +31,8 @@ class Kakadu:
 
     def kdu_compress(self, input_files, output_file, kakadu_options):
         """Converts an image file supported by kakadu to jpeg2000.
-        Bitonal or greyscale image files are converted to a single channel jpeg2000 file.
+        Bitonal or greyscale image files are converted to a single channel jpeg2000
+        file.
 
         Params:
             input_filepaths: Either a single filepath or a list of filepaths.
@@ -41,7 +44,8 @@ class Kakadu:
             kakadu_options: command line arguments
 
         Raises:
-            IOError: if input_file could not be accessed or if writing to output path fails
+            IOError: if input_file could not be accessed or if writing to output path
+            fails
             Exception: if subprocess call fails
         """
         if not isinstance(input_files, list):

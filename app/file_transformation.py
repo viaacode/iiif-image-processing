@@ -4,12 +4,11 @@ import subprocess
 
 # External imports
 from PIL import Image, ImageCms
-from PIL.ImageCms import applyTransform
+from viaa.configuration import ConfigParser
 
 # Internal imports
 from .kakadu import Kakadu
 from .helpers import get_file_name_without_extension, get_path_leaf
-from viaa.configuration import ConfigParser
 
 config = ConfigParser()
 
@@ -19,42 +18,46 @@ class FileTransformer:
         self.config: dict = configParser.app_cfg
         self.kakadu = Kakadu(self.config["kakadu"]["bin"])
 
-    def get_icc(self, file_name):
-        """Get icc_profile from image.
-
-        Returns:
-            icc
-        """
-        img = Image.open(file_name)
-        icc = img.info.get("icc_profile")
-        img.close()
-        return icc
-
     def crop_borders_and_color_charts(self, file_path) -> str:
         """Crop borders and color charts from image.
+
+        Params:
+            file_path: path to file
 
         Returns:
             Path to cropped image.
         """
         file_name = get_path_leaf(file_path)
         export_path = self.config["transform"]["path"]
+
         subprocess.call(
             "python colorchecker/detect.py"
-            + f" --weights colorchecker/weights/best.pt --source {file_path} --crop \
+            + f" --weights colorchecker/weights/best.pt --source \
+                {file_path} --target {file_path} --crop \
                 True --project {export_path} --name cropped --exist-ok",
             shell=True,
         )
         return f"{export_path}cropped/{file_name}"
 
-    def calculate_resize_params(self, file_name):
-        print(f"TODO: calculate resize_params for {file_name}")
+    def resize(self, file_path, resize_params):
+        """Resize image to given width and height.
 
-    def resize(self, file_name, resize_params):
-        print(f"TODO: resize {file_name}")
+        Params:
+            file_path: path to file
+            resize_params: (width, height): new dimensions
+        """
+        image = Image.open(file_path)
+        resized_image = image.resize(resize_params)
+        resized_image.save(file_path)
 
-    def convert_to_srgb(self, file_name, icc):
-        """Convert image to sRGB color space (if possible)."""
-        img = Image.open(file_name)
+    def convert_to_srgb(self, file_path, icc):
+        """Convert image to sRGB color space.
+
+        Params:
+            file_path: path to file
+            icc: icc of the image
+        """
+        img = Image.open(file_path)
 
         if icc:
             # Create ICC color profiles
@@ -62,16 +65,30 @@ class FileTransformer:
             input_profile = ImageCms.ImageCmsProfile(file)
             output_profile = ImageCms.createProfile("sRGB")
 
-            # Build and apply transformation
-            transformation = ImageCms.buildTransform(
-                input_profile, output_profile, img.mode, "RGB"
+            # Convert to output_profile
+            # TODO: Disable conversion to 8bit
+            img = ImageCms.profileToProfile(
+                img,
+                input_profile,
+                output_profile,
+                renderingIntent=ImageCms.INTENT_RELATIVE_COLORIMETRIC,
             )
-            applyTransform(img, transformation, inPlace=True)
+
+            img.save(
+                file_path,
+                save_all=True,
+                compression=None,
+                quality=100,
+                icc_profile=img.info.get("icc_profile"),
+            )
 
         img.close()
 
     def encode_image(self, input_file_path) -> str:
         """Encode image to jp2 file using Kakadu.
+
+        Params:
+            input_file_path: path to file
 
         Returns:
             Path to encoded image
@@ -89,8 +106,8 @@ class FileTransformer:
             "Cuse_eph=yes",
             "-flush_period",
             "1024",
-            "-jp2_space",
-            "sRGB",
+            # "-jp2_space",
+            # "sRGB",
         ]
 
         # Construct path to new image
