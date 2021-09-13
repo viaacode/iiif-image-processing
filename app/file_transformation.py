@@ -30,10 +30,11 @@ class FileTransformer:
         file_name = get_path_leaf(file_path)
         export_path = self.config["transform"]["path"]
 
+        # TODO: move colorchecker path to env variables
         subprocess.call(
-            "python colorchecker/detect.py"
-            + f" --weights colorchecker/weights/best.pt --source \
-                {file_path} --target {file_path} --crop \
+            "python /opt/colorchecker/detect.py"
+            + f" --weights /opt/colorchecker/weights/best.pt --source \
+                {file_path} --crop \
                 True --project {export_path} --name cropped --exist-ok",
             shell=True,
         )
