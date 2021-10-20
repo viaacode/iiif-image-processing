@@ -2,7 +2,7 @@ requests==2.25.1
 scikit-image==0.18.1
 # viaa-chassis==0.2.0rc1
 jpylyzer==2.0.0
-PyExifTool==0.4.9 
+PyExifTool==0.4.9
 
 ############################
 # Colorchecker requirements
@@ -11,7 +11,7 @@ PyExifTool==0.4.9
 # base ----------------------------------------
 matplotlib>=3.2.2
 numpy>=1.18.5
-opencv-python>=4.1.2
+opencv-python==4.1.2.30
 Pillow
 PyYAML>=5.3.1
 scipy>=1.4.1
