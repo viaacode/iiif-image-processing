@@ -11,7 +11,7 @@ PyExifTool==0.4.9
 # base ----------------------------------------
 matplotlib>=3.2.2
 numpy>=1.18.5
-opencv-python==4.1.2.30
+opencv-python==4.5.3.56
 Pillow
 PyYAML>=5.3.1
 scipy>=1.4.1
