@@ -32,8 +32,8 @@ class FileTransformer:
 
         # TODO: move colorchecker path to env variables
         subprocess.call(
-            "python /opt/colorchecker/detect.py"
-            + f" --weights /opt/colorchecker/weights/best.pt --source \
+            "python /opt/iiif-image-processing/colorchecker/detect.py"
+            + f" --weights /opt/iiif-image-processing/colorchecker/weights/best.pt --source \
                 {file_path} --crop \
                 True --project {export_path} --name cropped --exist-ok",
             shell=True,
