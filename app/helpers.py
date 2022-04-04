@@ -125,10 +125,11 @@ def get_image_dimensions(file_path):
     return (image.width, image.height)
 
 
-def get_resize_params(width, height):
+def get_resize_params(width, height, max_dimensions=None):
     """
     Calculate new image size, retaining the original aspect ratio (width/height).
-    Calculations are based on the width of the image.
+    If max_dimensions is specified, the new dimensions will be calculated based on the longest side.
+    Otherwise, calculations are based on the width of the image.
     If the width is > 15000 px, the new width will be set to 10000.
     If the width > 5000 px and < 15000 px, the new width will be 5000 + 1/2 width.
     If the width < 5000 px, the new width will be the same as the original width.
@@ -141,6 +142,15 @@ def get_resize_params(width, height):
         (width, height): tuple<int, int>
     """
     ratio = width / height
+
+    if max_dimensions is not None:
+        new_width, new_height = max_dimensions
+        if width > height:
+            new_height = int(round(new_width / ratio))
+        else:
+            new_width = int(round(new_height * ratio))
+        return (int(round(new_width)), int(round(new_height)))
+
     new_width = width
     new_height = height
 

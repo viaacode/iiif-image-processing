@@ -6,6 +6,7 @@ from viaa.configuration import ConfigParser
 
 # Internal imports
 from app.file_transformation import FileTransformer
+
 # from app.file_validation import FileValidator
 from app.helpers import (
     copy_file,
@@ -62,7 +63,16 @@ if __name__ == "__main__":
 
     # Resize file
     width, height = get_image_dimensions(cropped_file)
-    resize_params = get_resize_params(width, height)
+    max_dimensions = None
+    # If image has SABAM as license holder, max dimensions are 640x480 pixels
+    if (
+        mh_metadata["Dynamic"].get("dc_rights_rightsHolders")
+        and "SABAM"
+        in mh_metadata["Dynamic"]["dc_rights_rightsHolders"]["Licentiehouder"]
+    ):
+        max_dimensions = (640, 480)
+
+    resize_params = get_resize_params(width, height, max_dimensions)
     file_transformer.resize(cropped_file, resize_params)
 
     # Change color space
