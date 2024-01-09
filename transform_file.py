@@ -59,7 +59,7 @@ if __name__ == "__main__":
     icc = get_icc(file_path)
 
     # Crop file
-    cropped_file = file_transformer.crop_borders_and_color_charts(file_path)
+    cropped_file = file_path
 
     # Resize file
     width, height = get_image_dimensions(cropped_file)
