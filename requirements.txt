@@ -35,3 +35,8 @@ pandas
 # extras --------------------------------------
 thop  # FLOPS computation
 pycocotools>=2.0  # COCO mAP
+
+#######################
+# Watcher requirements
+#######################
+inotify==0.2.10
