@@ -40,3 +40,9 @@ pycocotools>=2.0  # COCO mAP
 # Watcher requirements
 #######################
 inotify==0.2.10
+
+#######################
+# Consumer requirements 
+#######################
+pika==1.3.2
+
