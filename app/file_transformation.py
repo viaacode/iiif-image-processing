@@ -95,20 +95,25 @@ class FileTransformer:
             Path to encoded image
         """
         kakadu_options = [
-            "Clevels=6",
-            "Clayers=6",
-            "Cprecincts={256,256},{256,256},{128,128}",
-            "Stiles={512,512}",
-            "Corder=RPCL",
-            "ORGgen_plt=yes",
-            "ORGtparts=R",
+            "Cmodes=HT",
+            "Clevels=5",
+            "Clayers=12",
+            "Cprecincts={256,256}",
             "Cblk={64,64}",
             "Cuse_sop=yes",
             "Cuse_eph=yes",
+            "Creversible=no",
+            "Corder=RPCL",
+            "ORGgen_plt=yes",
+            "ORGtparts=R",
+            "ORGplt_parts=R",
+            "Qfactor=100",
+            "-rate",
+            "2.5,0.5",
+            "no_weights",
+            "precise",
             "-flush_period",
             "1024",
-            # "-jp2_space",
-            # "sRGB",
         ]
 
         # Construct path to new image
