@@ -14,13 +14,11 @@ from app.helpers import (
     get_metadata_from_image,
     get_resize_params,
     get_file_extension,
-    get_file_name_without_extension,
     get_icc,
     get_image_dimensions,
     remove_file,
     rename_file,
 )
-from app.mediahaven import MediahavenClient
 
 """
 Script to apply transformations (crop, resize, convert color space, encode,
@@ -32,7 +30,6 @@ if __name__ == "__main__":
     configParser = ConfigParser()
     parser = argparse.ArgumentParser()
     file_transformer = FileTransformer(configParser)
-    mh_client = MediahavenClient(configParser)
 
     # Get arguments
     parser.add_argument(
@@ -43,10 +40,8 @@ if __name__ == "__main__":
 
     # Copy file and rename it to external_id.
     # File has to be copied so metadata can be added again later.
-    file_name = get_file_name_without_extension(file_path)
     extension = get_file_extension(file_path)
-    mh_metadata = mh_client.get_metadata(file_name)
-    external_id = mh_metadata["Administrative"]["ExternalId"]
+    external_id = 'todo'
     copied_file_path = copy_file(file_path)
     file_path = rename_file(file_path, external_id + extension)
 
@@ -64,14 +59,6 @@ if __name__ == "__main__":
     # Resize file
     width, height = get_image_dimensions(cropped_file)
     max_dimensions = None
-    # If image has SABAM as license holder, max dimensions are 640x480 pixels
-    if (
-        mh_metadata["Dynamic"].get("dc_rights_rightsHolders")
-        and "SABAM"
-        in mh_metadata["Dynamic"]["dc_rights_rightsHolders"]["Licentiehouder"]
-    ):
-        max_dimensions = (640, 480)
-
     resize_params = get_resize_params(width, height, max_dimensions)
     file_transformer.resize(cropped_file, resize_params)
 
