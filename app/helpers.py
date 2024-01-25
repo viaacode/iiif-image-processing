@@ -245,6 +245,6 @@ def get_iiif_file_destination(essence_file_path, sidecar_file_path):
     or_id = root.find(".//CP_id").text
     characters = essence_file_name[:2]
 
-    destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name
+    destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name + '.jp2'
 
     return destination

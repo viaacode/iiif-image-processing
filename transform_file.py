@@ -1,5 +1,6 @@
 # System imports
 import argparse
+from pathlib import Path
 
 # External imports
 from viaa.configuration import ConfigParser
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     # Copy file and rename it to external_id.
     # File has to be copied so metadata can be added again later.
     extension = get_file_extension(file_path)
-    external_id = 'todo'
+    external_id = Path(file_path).stem
     copied_file_path = copy_file(file_path)
     file_path = rename_file(file_path, external_id + extension)
 
@@ -78,7 +79,7 @@ if __name__ == "__main__":
 
     # Move file to destination
     if destination is not None:
-        move_file(copied_file_path, destination)
+        move_file(encoded_file, destination)
 
     # Cleanup
     remove_file(copied_file_path)

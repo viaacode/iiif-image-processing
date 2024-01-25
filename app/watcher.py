@@ -18,14 +18,14 @@ Remove the original file after the scripts have been executed.
 """
 
 if __name__ == '__main__':
-    i = inotify.adapters.InotifyTree('/tmp/subdir')
+    i = inotify.adapters.InotifyTree('/export/home')
 
     folders_to_ignore = [
         '/export/home/public',
         '/export/home/restricted',
     ]
 
-    workfolder_base = '/tmp/workdir'
+    workfolder_base = '/opt/image-processing-workfolder'
 
     for event in i.event_gen(yield_nones=False):
         (_, type_names, path, filename) = event
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         # Transform image by executing scripts
         subprocess.call(
             "python /opt/iiif-image-processing/transform_file.py"
-            + f" --file_path {file_to_transform}"
+            + f" --file_path {file_to_transform_path}"
             + f" --destination {destination}",
             shell=True,
         )

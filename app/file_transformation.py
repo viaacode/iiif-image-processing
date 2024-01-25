@@ -95,11 +95,11 @@ class FileTransformer:
             Path to encoded image
         """
         kakadu_options = [
-            #"Cmodes=HT",
+            # "Cmodes=HT",
             "Clevels=5",
             "Clayers=12",
-            "Cprecincts='{256,256}'",
-            "Cblk='{64,64}'",
+            "Cprecincts={256,256}",
+            "Cblk={64,64}",
             "Cuse_sop=yes",
             "Cuse_eph=yes",
             "Creversible=no",
