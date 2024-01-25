@@ -16,6 +16,7 @@ from app.helpers import (
     get_file_extension,
     get_icc,
     get_image_dimensions,
+    move_file,
     remove_file,
     rename_file,
 )
@@ -33,10 +34,14 @@ if __name__ == "__main__":
 
     # Get arguments
     parser.add_argument(
-        "--file_path", type=str, default=None, help="Path to file", required=True
+        "--file_path", type=str, default=None, help="Path to input file", required=True
+    )
+    parser.add_argument(
+        "--destination", type=str, default=None, help="Destination output file", required=False
     )
     args = parser.parse_args()
     file_path = args.file_path
+    destination = args.destination
 
     # Copy file and rename it to external_id.
     # File has to be copied so metadata can be added again later.
@@ -70,6 +75,10 @@ if __name__ == "__main__":
 
     # Add metadata to file
     copy_metadata(copied_file_path, encoded_file)
+
+    # Move file to destination
+    if destination is not None:
+        move_file(copied_file_path, destination)
 
     # Cleanup
     remove_file(copied_file_path)

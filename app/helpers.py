@@ -2,6 +2,8 @@
 import ntpath
 import os
 from shutil import copy2
+from pathlib import Path
+import xml.etree.ElementTree as ET
 
 # External imports
 import exiftool
@@ -202,3 +204,47 @@ def remove_file(file_path):
         os.remove(file_path)
     else:
         print(f"The file {file_path} does not exist")
+
+
+def move_file(source, destination):
+    """Move file from source to destination.
+
+    Params:
+        source: path to source file
+        destination: path to destination file
+    """
+    if os.path.exists(source):
+        os.replace(source, destination)
+    else:
+        print(f"The source file {source} does not exist")
+
+
+def get_iiif_file_destination(essence_file_path, sidecar_file_path):
+    """Determine the destination location of a IIIF image file.
+    The destination is constructed as following:
+    - base folder
+    - subfolder: public or restricted
+    - subfolder: OR-ID
+    - subfolder: first 2 characters of the filename
+
+    Params:
+        essence_file_path: absolute path to essence file
+        sidecar_file_path: absolute path to xml file containing metadata about the essence file
+
+    Returns:
+        destination: path to destination
+    """
+
+    essence_file_name = Path(essence_file_path).stem
+
+    tree = ET.parse(sidecar_file_path)
+    root = tree.getroot()
+
+    image_base_folder = '/export/home/'
+    visibility = 'public'  # TODO: get from sidecar
+    or_id = root.find(".//CP_id").text
+    characters = essence_file_name[:2]
+
+    destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name
+
+    return destination
