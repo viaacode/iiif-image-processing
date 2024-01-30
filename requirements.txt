@@ -40,6 +40,7 @@ pycocotools>=2.0  # COCO mAP
 # Watcher requirements
 #######################
 inotify==0.2.10
+pygfried==1.11.0
 
 #######################
 # Consumer requirements 

@@ -5,7 +5,7 @@ from pathlib import Path
 from os import walk
 
 # Internal imports
-from helpers import get_iiif_file_destination
+from helpers import get_iiif_file_destination, check_pronom_id
 
 # External imports
 import inotify.adapters
@@ -57,13 +57,13 @@ if __name__ == '__main__':
 
         essence_files_in_workfolder = [
                 file for file in next(walk(workfolder), (None, None, []))[2]
-                if file.endswith('.tif') or file.endswith('.tiff')
+                if check_pronom_id(workfolder + '/' + file, 'fmt/353')  # Tagged Image File Format (tif)
                 ]
         file_to_transform = essence_files_in_workfolder[0]
 
         metadata_files_in_workfolder = [
                 file for file in next(walk(workfolder), (None, None, []))[2]
-                if file.endswith('.xml')
+                if check_pronom_id(workfolder + '/' + file, 'fmt/101')  # Extensible Markup Language (xml)
                 ]
         file_to_transform_path = workfolder + '/' + file_to_transform
         sidecar_path = workfolder + '/' + metadata_files_in_workfolder[0]

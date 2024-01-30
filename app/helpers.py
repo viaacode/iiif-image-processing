@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 # External imports
 import exiftool
 from PIL import Image
+import pygfried
 
 
 def cmd_is_executable(cmd):
@@ -248,3 +249,18 @@ def get_iiif_file_destination(essence_file_path, sidecar_file_path):
     destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name + '.jp2'
 
     return destination
+
+
+def check_pronom_id(file_path, expected_pronom_id):
+    """Check if a file has the expected pronom id
+    More info about pronom: https://www.nationalarchives.gov.uk/pronom/
+
+    Params:
+        filename: absolute path to file
+        expected_pronom_id: pronom id (e.g. 'fmt/1776')
+
+    Returns:
+        pronom_id == expected_pronom_id: boolean
+    """
+    pronom_id = pygfried.identify(file_path)
+    return pronom_id == expected_pronom_id
