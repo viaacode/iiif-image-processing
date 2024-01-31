@@ -227,6 +227,7 @@ def get_iiif_file_destination(essence_file_path, sidecar_file_path):
     - subfolder: public or restricted
     - subfolder: OR-ID
     - subfolder: first 2 characters of the filename
+    - essence_file_name: fragment id of the IIIF image file
 
     Params:
         essence_file_path: absolute path to essence file
@@ -236,14 +237,13 @@ def get_iiif_file_destination(essence_file_path, sidecar_file_path):
         destination: path to destination
     """
 
-    essence_file_name = Path(essence_file_path).stem
-
     tree = ET.parse(sidecar_file_path)
     root = tree.getroot()
 
     image_base_folder = '/export/home/'
     visibility = 'public'  # TODO: get from sidecar
     or_id = root.find(".//CP_id").text
+    essence_file_name = root.find(".//FragmentId").text
     characters = essence_file_name[:2]
 
     destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name + '.jp2'
