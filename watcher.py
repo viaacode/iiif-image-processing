@@ -7,7 +7,7 @@ from pathlib import Path
 from os import walk, environ
 
 # Internal imports
-from helpers import get_iiif_file_destination, check_pronom_id
+from app.helpers import get_iiif_file_destination, check_pronom_id
 from viaa.observability import logging
 from viaa.configuration import ConfigParser
 
