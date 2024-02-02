@@ -12,7 +12,7 @@ PyExifTool==0.4.9
 matplotlib>=3.2.2
 numpy>=1.18.5
 opencv-python==4.5.3.56
-Pillow
+Pillow==9.5.0
 PyYAML>=5.3.1
 scipy>=1.4.1
 torch==1.8.1
