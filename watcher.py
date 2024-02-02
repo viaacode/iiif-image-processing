@@ -26,11 +26,6 @@ if __name__ == '__main__':
     config = ConfigParser()
     logger = logging.get_logger('watcher', config)
 
-    folders_to_ignore = [
-        '/export/home/public',
-        '/export/home/restricted',
-    ]
-
     workfolder_base = '/opt/image-processing-workfolder'
 
     logger.info('Watching dir : %s', '/export/home')
@@ -38,10 +33,6 @@ if __name__ == '__main__':
 
     for event in i.event_gen(yield_nones=False):
         (_, type_names, path, filename) = event
-
-        if path in folders_to_ignore:
-            # todo: logging
-            continue
 
         # Only listen to write events
         if 'IN_CLOSE_WRITE' not in type_names:
