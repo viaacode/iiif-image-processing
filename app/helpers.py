@@ -2,7 +2,6 @@
 import ntpath
 import os
 from shutil import copy2
-from pathlib import Path
 import xml.etree.ElementTree as ET
 
 # External imports
