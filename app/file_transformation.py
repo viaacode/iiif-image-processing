@@ -95,7 +95,7 @@ class FileTransformer:
             Path to encoded image
         """
         kakadu_options = [
-            # "Cmodes=HT",
+            "Cmodes=HT",
             "Clevels=5",
             "Clayers=12",
             "Cprecincts={256,256}",
@@ -118,7 +118,7 @@ class FileTransformer:
 
         # Construct path to new image
         file_name = get_file_name_without_extension(input_file_path)
-        output_file_path = self.config["transform"]["path"] + "/" + file_name + ".jp2"
+        output_file_path = self.config["transform"]["path"] + "/" + file_name + ".jph"
 
         # Encode image using kdu_compress
         self.kakadu.kdu_compress(input_file_path, output_file_path, kakadu_options)

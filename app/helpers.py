@@ -245,7 +245,7 @@ def get_iiif_file_destination(essence_file_path, sidecar_file_path):
     essence_file_name = root.find(".//FragmentId").text
     characters = essence_file_name[:2]
 
-    destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name + '.jp2'
+    destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name + '.jph'
 
     return destination
 
