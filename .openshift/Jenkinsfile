@@ -1,8 +1,32 @@
+def remoteInt = [:]
+remoteInt.name = 'iiif-int'
+remoteInt.host = 'do-int-img-01.do.viaa.be'
+withCredentials([usernamePassword(credentialsId: 'iiif_ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASSWORD')]) {
+  remoteInt.password = SSH_PASSWORD
+  remoteInt.user = SSH_USER
+  remoteInt.allowAnyHosts = true
+}
+def remoteQas = [:]
+remoteQas.name = 'iiif-qas'
+remoteQas.host = 'do-qas-img-01.do.viaa.be'
+withCredentials([usernamePassword(credentialsId: 'iiif_ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASSWORD')]) {
+  remoteQas.password = SSH_PASSWORD
+  remoteQas.user = SSH_USER
+  remoteQas.allowAnyHosts = true
+}
+def remotePrd = [:]
+remotePrd.name = 'iiif-prd'
+remotePrd.host = 'do-prd-img-01.do.viaa.be'
+withCredentials([usernamePassword(credentialsId: 'iiif_ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASSWORD')]) {
+  remotePrd.password = SSH_PASSWORD
+  remotePrd.user = SSH_USER
+  remotePrd.allowAnyHosts = true
+}
 pipeline {
     agent {
         kubernetes {
-            defaultContainer 'default'
-            yaml """\
+        cloud 'kubernetes'
+          yaml """\
         apiVersion: v1
         kind: Pod
         metadata:
@@ -23,6 +47,16 @@ pipeline {
             - cat
             tty: true
             imagePullPolicy: Always
+          - name: kaniko
+            workingDir: /home/jenkins
+            image: gcr.io/kaniko-project/executor:debug
+            imagePullPolicy: Always
+            command:
+            - /busybox/cat
+            tty: true
+            volumeMounts:
+            - name: docker-config
+            mountPath: /kaniko/.docker
         """.stripIndent()
         }
     }
@@ -37,6 +71,8 @@ pipeline {
         OC_URL = 'https://c113-e.private.eu-de.containers.cloud.ibm.com:30227'
         JIRA_URL = 'meemoo.atlassian.net'
         APP_NAME = 'iiif-image-processing'
+        REGISTRY = 'default-route-openshift-image-registry.meemoo2-2bc857e5f10eb63ab790a3a1d19a696c-i000.eu-de.containers.appdomain.cloud'
+        NAMESPACE = 'iiif'
     }
 
     stages {
@@ -91,6 +127,10 @@ pipeline {
                 container('oc') {
                     tagNewImage('int')
                 }
+                kanikoTagImage('int')
+                sshCommand remote: remoteInt, command: "docker image prune -fa"
+                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
+                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
             }
             post {
                 always {
@@ -189,3 +229,12 @@ void tagNewImage(String environment) {
     oc rollout status deployment/$APP_NAME-${environment} --watch=true --timeout=10m
     """
 }
+
+void kanikoTagImage(String environment) {
+  echo "Deploying to ${environment} using kaniko"
+  container('kaniko') {
+    sh """echo "FROM $REGISTRY/$NAMESPACE/$APP_NAME:$GIT_SHORT_COMMIT" | \
+    /kaniko/executor --dockerfile /dev/stdin --destination $REGISTRY/$NAMESPACE/$APP_NAME:${environment}"""
+  }
+}
+
