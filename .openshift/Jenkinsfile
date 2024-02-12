@@ -36,17 +36,8 @@ pipeline {
             app: iiif-image-processing
         spec:
           containers:
-          - name: default
-            image: ${getImageFromDockerfile()}
-            command:
-            - cat
-            tty: true
-          - name: oc
-            image: image-registry.openshift-image-registry.svc:5000/ci-cd/py:3.7
-            command:
-            - cat
-            tty: true
-            imagePullPolicy: Always
+          - name: jnlp
+            workingDir: /home/jenkins
           - name: kaniko
             workingDir: /home/jenkins
             image: gcr.io/kaniko-project/executor:debug
@@ -56,7 +47,24 @@ pipeline {
             tty: true
             volumeMounts:
             - name: docker-config
-            mountPath: /kaniko/.docker
+              mountPath: /kaniko/.docker
+          - name: default
+            image: python:3.9-slim
+            command:
+            - cat
+            tty: true
+          - name: k8s
+            image: default-route-openshift-image-registry.meemoo2-2bc857e5f10eb63ab790a3a1d19a696c-i000.eu-de.containers.appdomain.cloud/ci-cd/k8s:latest
+            command:
+            - cat
+            tty: true
+            imagePullPolicy: Always
+            imagePullSecrets:
+            - name: registry-cred
+          volumes:
+          - name: docker-config
+            configMap:
+              name: docker-config
         """.stripIndent()
         }
     }
@@ -78,7 +86,7 @@ pipeline {
     stages {
         stage('Calculate extra ENV vars') {
             steps {
-                container('oc') {
+                container('k8s') {
                     script {
                         env.GIT_SHORT_COMMIT = sh(script: "printf \$(git rev-parse --short ${GIT_COMMIT})", returnStdout: true)
                         env.IMAGE_TAG = sh(script: 'git describe --tags || echo latest', returnStdout: true)
@@ -94,25 +102,20 @@ pipeline {
                 sh 'make -f ./.openshift/Makefile test'
             }
         }
-        stage('Build code') {
+        stage('Build with Kaniko') {
+            environment {
+              PATH="/busybox:/kaniko:$PATH"
+            }
             when {
                 not {
                     buildingTag()
                 }
             }
             steps {
-                container('oc') {
-                    script {
-                        sh '''#!/bin/bash
-                        oc project $OC_PROJECT
-                        oc import-image $BASE_IMG --confirm
-                        oc set image-lookup $BASE_IMG_NAME
-                        oc new-build -l ref=$BRANCH_NAME --strategy=docker --name $APP_NAME-$GIT_SHORT_COMMIT --to $APP_NAME:$GIT_SHORT_COMMIT --binary --context-dir="" || echo "Probably already exists, start new build"
-                        sleep 3
-                        oc annotate --overwrite buildconfig/$APP_NAME-$GIT_SHORT_COMMIT ref=$BRANCH_NAME shortcommit=$GIT_SHORT_COMMIT
-                        oc start-build $APP_NAME-$GIT_SHORT_COMMIT --from-dir=. --follow=true --wait=true
-                        '''
-                    }
+                container(name: 'kaniko', shell: '/busybox/sh') {
+                    sh '''#!/busybox/sh
+                  /kaniko/executor --build-arg COMMIT=${GIT_SHORT_COMMIT} --build-arg TAG=${IMAGE_TAG} --context `pwd` --verbosity info --destination ${REGISTRY}/${NAMESPACE}/${APP_NAME}:${GIT_SHORT_COMMIT}
+                  '''
                 }
             }
         }
@@ -124,9 +127,6 @@ pipeline {
                 }
             }
             steps {
-                container('oc') {
-                    tagNewImage('int')
-                }
                 kanikoTagImage('int')
                 sshCommand remote: remoteInt, command: "docker image prune -fa"
                 sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
@@ -146,9 +146,10 @@ pipeline {
                 anyOf { branch 'master'; branch 'main' }
             }
             steps {
-                container('oc') {
-                    tagNewImage('qas')
-                }
+                kanikoTagImage('qas')
+                sshCommand remote: remoteInt, command: "docker image prune -fa"
+                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
+                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
             }
             post {
                 always {
@@ -161,9 +162,10 @@ pipeline {
                 buildingTag()
             }
             steps {
-                container('oc') {
-                    tagNewImage('prd')
-                }
+                kanikoTagImage('prd')
+                sshCommand remote: remoteInt, command: "docker image prune -fa"
+                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
+                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
             }
             post {
                 always {
@@ -218,16 +220,6 @@ void setGitHubBuildStatus(String message, String state) {
         errorHandlers: [[$class: 'ChangingBuildStatusErrorHandler', result: 'UNSTABLE']],
         statusResultSource: [ $class: 'ConditionalStatusResultSource', results: [[$class: 'AnyBuildResult', message: message, state: state]] ]
     ])
-}
-
-void tagNewImage(String environment) {
-    echo "Deploying to ${environment}"
-    sh """#!/bin/bash
-    oc project $OC_PROJECT
-    oc tag $APP_NAME:$GIT_SHORT_COMMIT $APP_NAME:${environment}
-    # Check the status of the rollout
-    oc rollout status deployment/$APP_NAME-${environment} --watch=true --timeout=10m
-    """
 }
 
 void kanikoTagImage(String environment) {
