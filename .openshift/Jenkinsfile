@@ -133,7 +133,7 @@ pipeline {
                 kanikoTagImage('int')
                 sshCommand remote: remoteInt, command: "docker image prune -fa"
                 sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
-                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
+                sshCommand remote: remoteInt, sudo: true, command: "systemctl restart imageserver-watcher"
             }
             post {
                 always {
