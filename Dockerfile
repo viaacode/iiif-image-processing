@@ -11,3 +11,8 @@ RUN pip install -r requirements.txt \
 --extra-index-url http://do-prd-mvn-01.do.viaa.be:8081/repository/pypi-internal/simple \
 --trusted-host do-prd-mvn-01.do.viaa.be --no-warn-script-location 
 
+COPY --chown=iiif:iiif . /opt/iiif-image-processing
+
+USER ftphaven
+CMD ["python3", "-m", "watcher"]
+
