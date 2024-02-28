@@ -54,6 +54,7 @@ if __name__ == '__main__':
                 zip_ref.extractall(workfolder)
         except zipfile.BadZipFile:
             logger.debug('Invalid zip file %s', full_file_path)
+            continue
 
         essence_files_in_workfolder = [
                 file for file in next(walk(workfolder), (None, None, []))[2]
