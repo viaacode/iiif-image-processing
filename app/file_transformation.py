@@ -1,10 +1,11 @@
 # System imports
-import io
 import subprocess
 
 # External imports
-from PIL import Image, ImageCms
+from PIL import Image
 from viaa.configuration import ConfigParser
+from viaa.observability import logging
+from wand.image import Image as WandImage
 
 # Internal imports
 from .kakadu import Kakadu
@@ -55,35 +56,17 @@ class FileTransformer:
         """Convert image to sRGB color space.
 
         Params:
-            file_path: path to file
+            file_path: path to output file
             icc: icc of the image
         """
-        img = Image.open(file_path)
+        logger = logging.get_logger("watcher", config)
 
-        if icc:
-            # Create ICC color profiles
-            file = io.BytesIO(icc)
-            input_profile = ImageCms.ImageCmsProfile(file)
-            output_profile = ImageCms.createProfile("sRGB")
-
-            # Convert to output_profile
-            # TODO: Disable conversion to 8bit
-            img = ImageCms.profileToProfile(
-                img,
-                input_profile,
-                output_profile,
-                renderingIntent=ImageCms.INTENT_RELATIVE_COLORIMETRIC,
-            )
-
-            img.save(
-                file_path,
-                save_all=True,
-                compression=None,
-                quality=100,
-                icc_profile=img.info.get("icc_profile"),
-            )
-
-        img.close()
+        # Convert to 8 bit output_profile
+        with WandImage(filename=file_path) as i:
+            i.transform_colorspace("srgb")
+            i.profiles["ICC"] = icc
+            i.save(filename=file_path)
+            logger.debug("writing to %s", file_path)
 
     def encode_image(self, input_file_path) -> str:
         """Encode image to jp2 file using Kakadu.
