@@ -3,6 +3,8 @@ scikit-image==0.18.1
 # viaa-chassis==0.2.0rc1
 jpylyzer==2.0.0
 PyExifTool==0.4.9
+Pillow==9.5.0
+Wand==0.6.13
 
 ############################
 # Colorchecker requirements
