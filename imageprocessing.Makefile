@@ -19,5 +19,5 @@ run:  check-env
 
 restart: check-env
         docker ps -q --filter "name=imageserver-watcher" | xargs docker stop;
-        docker run -d --name=imageserver-watcher -v /export/home\:/export/home --rm --env-file=.env --user 1002\:1002 ${REGISTRY}/${IMAGE_NAME}:${ENV}
+        docker run -d --name=imageserver-watcher -v /export/home\:/export/home -v /opt/image-processing-workfolder\:/opt/image-processing-workfolder -v /opt/kakadu\:/opt/kakadu --rm --env-file=.env --user 1002\:1002 ${REGISTRY}/${IMAGE_NAME}:${ENV}
 
