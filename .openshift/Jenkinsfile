@@ -150,9 +150,9 @@ pipeline {
             }
             steps {
                 kanikoTagImage('qas')
-                sshCommand remote: remoteInt, command: "docker image prune -fa"
-                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
-                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
+                sshCommand remote: remoteQas, command: "docker image prune -fa"
+                sshCommand remote: remoteQas, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:qas"
+                sshCommand remote: remoteQas, command: "systemctl restart imageserver-watcher"
             }
             post {
                 always {
@@ -166,9 +166,9 @@ pipeline {
             }
             steps {
                 kanikoTagImage('prd')
-                sshCommand remote: remoteInt, command: "docker image prune -fa"
-                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
-                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
+                sshCommand remote: remotePrd, command: "docker image prune -fa"
+                sshCommand remote: remotePrd, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:prd"
+                sshCommand remote: remotePrd, command: "systemctl restart imageserver-watcher"
             }
             post {
                 always {
