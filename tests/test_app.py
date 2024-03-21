@@ -1,6 +1,3 @@
-# External imports
-from viaa.configuration import ConfigParser
-
 # Internal imports
 from app.helpers import (
     get_file_extension,
@@ -8,10 +5,6 @@ from app.helpers import (
     get_path_leaf,
     get_resize_params,
 )
-from app.file_transformation import FileTransformer
-
-configParser = ConfigParser()
-file_transformer = FileTransformer(configParser)
 
 
 def test_get_file_extension_tiff():

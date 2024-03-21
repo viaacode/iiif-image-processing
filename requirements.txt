@@ -1,42 +1,10 @@
 requests==2.25.1
 scikit-image==0.18.1
-# viaa-chassis==0.2.0rc1
+viaa-chassis==0.2.0rc1
 jpylyzer==2.0.0
 PyExifTool==0.4.9
 Pillow==9.5.0
 Wand==0.6.13
-
-############################
-# Colorchecker requirements
-############################
-
-# base ----------------------------------------
-matplotlib>=3.2.2
-numpy>=1.18.5
-opencv-python==4.5.3.56
-Pillow==9.5.0
-PyYAML>=5.3.1
-scipy>=1.4.1
-torch==1.8.1
-torchvision==0.9.1
-tqdm>=4.41.0
-
-# logging -------------------------------------
-tensorboard>=2.4.1
-# wandb
-
-# plotting ------------------------------------
-seaborn>=0.11.0
-pandas
-
-# export --------------------------------------
-# coremltools>=4.1
-# onnx>=1.8.1
-# scikit-learn==0.19.2  # for coreml quantization
-
-# extras --------------------------------------
-thop  # FLOPS computation
-pycocotools>=2.0  # COCO mAP
 
 #######################
 # Watcher requirements

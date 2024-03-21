@@ -1,0 +1,235 @@
+def remoteInt = [:]
+remoteInt.name = 'iiif-int'
+remoteInt.host = 'do-int-img-01.do.viaa.be'
+withCredentials([usernamePassword(credentialsId: 'iiif_ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASSWORD')]) {
+  remoteInt.password = SSH_PASSWORD
+  remoteInt.user = SSH_USER
+  remoteInt.allowAnyHosts = true
+}
+def remoteQas = [:]
+remoteQas.name = 'iiif-qas'
+remoteQas.host = 'do-qas-img-01.do.viaa.be'
+withCredentials([usernamePassword(credentialsId: 'iiif_ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASSWORD')]) {
+  remoteQas.password = SSH_PASSWORD
+  remoteQas.user = SSH_USER
+  remoteQas.allowAnyHosts = true
+}
+def remotePrd = [:]
+remotePrd.name = 'iiif-prd'
+remotePrd.host = 'do-prd-img-01.do.viaa.be'
+withCredentials([usernamePassword(credentialsId: 'iiif_ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASSWORD')]) {
+  remotePrd.password = SSH_PASSWORD
+  remotePrd.user = SSH_USER
+  remotePrd.allowAnyHosts = true
+}
+pipeline {
+    agent {
+        kubernetes {
+        cloud 'kubernetes'
+          yaml """\
+        apiVersion: v1
+        kind: Pod
+        metadata:
+          labels:
+            component: builder
+            lang: ${getBaseImageName()}
+            app: iiif-image-processing
+        spec:
+          containers:
+          - name: jnlp
+            workingDir: /home/jenkins
+          - name: kaniko
+            workingDir: /home/jenkins
+            image: gcr.io/kaniko-project/executor:debug
+            imagePullPolicy: Always
+            command:
+            - /busybox/cat
+            tty: true
+            volumeMounts:
+            - name: docker-config
+              mountPath: /kaniko/.docker
+          - name: default
+            image: python:3.9-slim
+            command:
+            - cat
+            tty: true
+          - name: k8s
+            image: default-route-openshift-image-registry.meemoo2-2bc857e5f10eb63ab790a3a1d19a696c-i000.eu-de.containers.appdomain.cloud/ci-cd/k8s:latest
+            command:
+            - cat
+            tty: true
+            imagePullPolicy: Always
+            imagePullSecrets:
+            - name: registry-cred
+          volumes:
+          - name: docker-config
+            configMap:
+              name: docker-config
+        """.stripIndent()
+        }
+    }
+    options {
+        timeout(time: 45, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+    environment {
+        OC_PROJECT = 'iiif'
+        BASE_IMG = "${getImageFromDockerfile()}"
+        BASE_IMG_NAME = "${getBaseImageName()}"
+        OC_URL = 'https://c113-e.private.eu-de.containers.cloud.ibm.com:30227'
+        JIRA_URL = 'meemoo.atlassian.net'
+        APP_NAME = 'iiif-image-processing'
+        REGISTRY = 'default-route-openshift-image-registry.meemoo2-2bc857e5f10eb63ab790a3a1d19a696c-i000.eu-de.containers.appdomain.cloud'
+        NAMESPACE = 'iiif'
+    }
+
+    stages {
+        stage('Calculate extra ENV vars') {
+            steps {
+                container('k8s') {
+                    script {
+                        env.GIT_SHORT_COMMIT = sh(script: "printf \$(git rev-parse --short ${GIT_COMMIT})", returnStdout: true)
+                        env.IMAGE_TAG = sh(script: 'git describe --tags || echo latest', returnStdout: true)
+                        // The name used for the build config based on the image tag
+                        // Replace '.' with '_' as '.' is not allowed.
+                        env.BUILD_CONFIG_NAME = sh(script: 'echo "${IMAGE_TAG}" | sed -r "s/\\./\\-/g"', returnStdout: true)
+                    }
+                }
+            }
+        }
+        stage('Test code') {
+            steps {
+                container('default') {
+                    sh 'apt-get update && apt-get install -y make bash'
+                    sh 'make -f ./.openshift/Makefile test'
+                }
+            }
+        }
+        stage('Build with Kaniko') {
+            environment {
+              PATH="/busybox:/kaniko:$PATH"
+            }
+            when {
+                not {
+                    buildingTag()
+                }
+            }
+            steps {
+                container(name: 'kaniko', shell: '/busybox/sh') {
+                    sh '''#!/busybox/sh
+                  /kaniko/executor --build-arg COMMIT=${GIT_SHORT_COMMIT} --build-arg TAG=${IMAGE_TAG} --context `pwd` --verbosity info --destination ${REGISTRY}/${NAMESPACE}/${APP_NAME}:${GIT_SHORT_COMMIT}
+                  '''
+                }
+            }
+        }
+        stage('Deploy INT') {
+            when {
+                anyOf {
+                    changeRequest target: 'master'
+                    changeRequest target: 'main'
+                }
+            }
+            steps {
+                kanikoTagImage('int')
+                sshCommand remote: remoteInt, command: "docker image prune -fa"
+                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
+                sshCommand remote: remoteInt, sudo: true, command: "systemctl restart imageserver-watcher"
+            }
+            post {
+                always {
+                    script {
+                        env.BRANCH_NAME = env.CHANGE_BRANCH
+                    }
+                    jiraSendDeploymentInfo site: "${JIRA_URL}", environmentId: 'int', environmentName: 'int', environmentType: 'testing'
+                }
+            }
+        }
+        stage('Deploy QAS') {
+            when {
+                anyOf { branch 'master'; branch 'main' }
+            }
+            steps {
+                kanikoTagImage('qas')
+                sshCommand remote: remoteInt, command: "docker image prune -fa"
+                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
+                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
+            }
+            post {
+                always {
+                    jiraSendDeploymentInfo site: "${JIRA_URL}", environmentId: 'qas', environmentName: 'qas', environmentType: 'staging'
+                }
+            }
+        }
+        stage('Deploy PRD') {
+            when {
+                buildingTag()
+            }
+            steps {
+                kanikoTagImage('prd')
+                sshCommand remote: remoteInt, command: "docker image prune -fa"
+                sshCommand remote: remoteInt, command: "docker pull ${REGISTRY}/${NAMESPACE}/${APP_NAME}:int"
+                sshCommand remote: remoteInt, command: "systemctl restart imageserver-watcher"
+            }
+            post {
+                always {
+                    jiraSendDeploymentInfo site: "${JIRA_URL}", environmentId: 'prd', environmentName: 'prd', environmentType: 'production'
+                }
+            }
+        }
+    }
+    post {
+        success {
+            script {
+                if (env.BRANCH_NAME.startsWith('PR')) {
+                    setGitHubBuildStatus('Build', 'SUCCESS')
+                }
+            }
+        }
+        failure {
+            script {
+                if (env.BRANCH_NAME.startsWith('PR')) {
+                    setGitHubBuildStatus('Build', 'FAILURE')
+                }
+            }
+        }
+        always {
+            jiraSendBuildInfo site: "${JIRA_URL}"
+            container('default') {
+                // Archive tets results
+                script {
+                    if (fileExists('./tests/test_results.xml')) {
+                        junit 'tests/test_results.xml'
+                    } else {
+                        echo 'No test results found'
+                    }
+                }
+            }
+        }
+    }
+}
+
+void getImageFromDockerfile() {
+    return 'python:3.9'
+}
+void getBaseImageName() {
+    return getImageFromDockerfile().split(':')[0]
+}
+
+void setGitHubBuildStatus(String message, String state) {
+    step([
+        $class: 'GitHubCommitStatusSetter',
+        reposSource: [$class: 'ManuallyEnteredRepositorySource', url: "${GIT_URL}"],
+        commitShaSource: [$class: 'ManuallyEnteredShaSource', sha: "${GIT_COMMIT}"],
+        errorHandlers: [[$class: 'ChangingBuildStatusErrorHandler', result: 'UNSTABLE']],
+        statusResultSource: [ $class: 'ConditionalStatusResultSource', results: [[$class: 'AnyBuildResult', message: message, state: state]] ]
+    ])
+}
+
+void kanikoTagImage(String environment) {
+  echo "Deploying to ${environment} using kaniko"
+  container('kaniko') {
+    sh """echo "FROM $REGISTRY/$NAMESPACE/$APP_NAME:$GIT_SHORT_COMMIT" | \
+    /kaniko/executor --dockerfile /dev/stdin --destination $REGISTRY/$NAMESPACE/$APP_NAME:${environment}"""
+  }
+}
+
