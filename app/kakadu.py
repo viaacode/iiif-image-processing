@@ -21,9 +21,7 @@ class Kakadu:
             raise OSError(
                 "Could not find executable {0}. Check kakadu is installed and \
                 kdu_compress exists at the configured \
-                path".format(
-                    self._command_path("kdu_compress")
-                )
+                path".format(self._command_path("kdu_compress"))
             )
 
     def _command_path(self, command):
@@ -72,7 +70,7 @@ class Kakadu:
         ] + kakadu_options
 
         try:
-            subprocess.check_call(command_options, stderr=subprocess.STDOUT)
+            return subprocess.check_call(command_options, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             raise Exception(
                 "Kakadu {0} failed on {1}. Command: {2}, Error: {3}".format(

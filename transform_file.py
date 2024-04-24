@@ -3,6 +3,7 @@ import argparse
 from pathlib import Path
 
 # External imports
+from viaa.observability import logging
 from viaa.configuration import ConfigParser
 
 # Internal imports
@@ -32,6 +33,7 @@ if __name__ == "__main__":
     configParser = ConfigParser()
     parser = argparse.ArgumentParser()
     file_transformer = FileTransformer(configParser)
+    logger = logging.get_logger("transform_file", config)
 
     # Get arguments
     parser.add_argument(
@@ -73,12 +75,14 @@ if __name__ == "__main__":
 
     # Encode to jp2
     encoded_file = file_transformer.encode_image(cropped_file)
+    logger.debug("Encoded file %s", encoded_file)
 
     # Add metadata to file
     copy_metadata(copied_file_path, encoded_file)
 
     # Move file to destination
     if destination is not None:
+        logger.debug("Moving encoded file %s to %s", encoded_file, destination)
         move_file(encoded_file, destination)
 
     # Cleanup
