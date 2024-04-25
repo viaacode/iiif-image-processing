@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     # Move file to destination
     if destination is not None:
-        logger.debug("Moving encoded_file file %s to %s", encoded_file, destination_file)
+        logger.debug("Moving encoded_file file %s to %s", encoded_file, destination)
         move_file(encoded_file, destination)
 
     # Cleanup
