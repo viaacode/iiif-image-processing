@@ -5,6 +5,7 @@ jpylyzer==2.0.0
 PyExifTool==0.4.9
 Pillow==9.5.0
 Wand==0.6.13
+retry==0.9.2
 
 #######################
 # Watcher requirements

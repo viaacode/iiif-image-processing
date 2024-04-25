@@ -1,6 +1,7 @@
 # System imports
-import ntpath
 import os
+import ntpath
+from retry import retry
 from shutil import copy2
 import xml.etree.ElementTree as ET
 
@@ -206,6 +207,7 @@ def remove_file(file_path):
         print(f"The file {file_path} does not exist")
 
 
+@retry(tries=5, delay=1, backoff=2)
 def move_file(source, destination):
     """Move file from source to destination.
 
