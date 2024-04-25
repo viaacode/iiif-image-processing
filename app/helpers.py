@@ -2,7 +2,7 @@
 import os
 import ntpath
 from retry import retry
-from shutil import copy2
+from shutil import copy2, move
 import xml.etree.ElementTree as ET
 
 # External imports
@@ -216,7 +216,7 @@ def move_file(source, destination):
         destination: path to destination file
     """
     if os.path.exists(source):
-        os.replace(source, destination)
+        move(source, destination)
     else:
         print(f"The source file {source} does not exist")
 
