@@ -33,7 +33,7 @@ if __name__ == "__main__":
     configParser = ConfigParser()
     parser = argparse.ArgumentParser()
     file_transformer = FileTransformer(configParser)
-    logger = logging.get_logger("transform_file", config)
+    logger = logging.get_logger("transform_file", configParser)
 
     # Get arguments
     parser.add_argument(
