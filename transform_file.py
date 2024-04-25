@@ -1,4 +1,5 @@
 # System imports
+import glob, os
 import argparse
 from pathlib import Path
 
@@ -87,3 +88,5 @@ if __name__ == "__main__":
 
     # Cleanup
     remove_file(copied_file_path)
+    for f in glob.glob(copied_file_path + '*'):
+        os.remove(f)
