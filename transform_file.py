@@ -57,25 +57,21 @@ if __name__ == "__main__":
     # Get metadata from original image
     metadata = get_metadata_from_image(file_path)
 
-    # Get icc from image here, because it will be lost after
-    # the 'crop_borders_and_color_charts' function has been executed.
+    # Get icc from image here, because it will be lost. 
     # The original icc is needed to convert the color space to sRGB.
     icc = get_icc(file_path)
 
-    # Crop file
-    cropped_file = file_path
-
     # Resize file
-    width, height = get_image_dimensions(cropped_file)
+    width, height = get_image_dimensions(file_path)
     max_dimensions = None
     resize_params = get_resize_params(width, height, max_dimensions)
-    file_transformer.resize(cropped_file, resize_params)
+    file_transformer.resize(file_path, resize_params)
 
     # Change color space
-    file_transformer.convert_to_srgb(cropped_file, icc)
+    file_transformer.convert_to_srgb(file_path, icc)
 
     # Encode to jp2
-    encoded_file = file_transformer.encode_image(cropped_file)
+    encoded_file = file_transformer.encode_image(file_path)
     logger.debug("Encoded file %s", encoded_file)
 
     # Add metadata to file
