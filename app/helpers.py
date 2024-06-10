@@ -241,13 +241,23 @@ def get_iiif_file_destination(essence_file_path, sidecar_file_path):
     tree = ET.parse(sidecar_file_path)
     root = tree.getroot()
 
-    image_base_folder = '/export/images/'
-    visibility = 'public'  # TODO: get from sidecar
+    image_base_folder = "/export/images/"
+    visibility = "public"  # TODO: get from sidecar, can be 'public' or 'restricted'
     or_id = root.find(".//CP_id").text
     essence_file_name = root.find(".//FragmentId").text
     characters = essence_file_name[:2]
 
-    destination = image_base_folder + visibility + '/' + or_id + '/' + characters + '/' + essence_file_name + '.jph'
+    destination = (
+        image_base_folder
+        + visibility
+        + "/"
+        + or_id
+        + "/"
+        + characters
+        + "/"
+        + essence_file_name
+        + ".jph"
+    )
 
     return destination
 
