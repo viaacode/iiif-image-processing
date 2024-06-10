@@ -11,4 +11,8 @@ app:
         bin: !ENV ${KAKADU_BIN}
     transform:
         path: !ENV ${TRANSFORM_PATH}
-
+    rabbitmq:
+        username: !ENV ${RABBITMQ_USERNAME}
+        password: !ENV ${RABBITMQ_PASSWORD}
+        host: !ENV ${RABBITMQ_HOST}
+        queue: !ENV ${RABBITMQ_QUEUE}
