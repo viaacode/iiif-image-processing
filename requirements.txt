@@ -17,4 +17,5 @@ pygfried>=0.7.0
 # Consumer requirements 
 #######################
 pika>=1.3.2
+mediahaven>=0.7.0
 
