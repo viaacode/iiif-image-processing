@@ -6,6 +6,10 @@ import logging
 # Internal imports
 from viaa.configuration import ConfigParser
 from helpers import remove_file
+from mediahaven import MediaHaven
+from mediahaven.resources.base_resource import MediaHavenPageObject
+from mediahaven.mediahaven import MediaHavenException
+from mediahaven.oauth2 import ROPCGrant
 
 # External imports
 import pika
@@ -17,6 +21,17 @@ LOG_FORMAT = (
 LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+
+config_parser = ConfigParser()
+
+client_id = config_parser.app_cfg["mediahaven"]["client"]
+client_secret = config_parser.app_cfg["mediahaven"]["secret"]
+user = config_parser.app_cfg["mediahaven"]["username"]
+password = config_parser.app_cfg["mediahaven"]["password"]
+url = config_parser.app_cfg["mediahaven"]["host"]
+grant = ROPCGrant(url, client_id, client_secret)
+grant.request_token(user, password)
+mediahaven_client = MediaHaven(url, grant)
 
 
 def on_message(chan, method_frame, header_frame, body, userdata=None):
@@ -32,9 +47,17 @@ def on_message(chan, method_frame, header_frame, body, userdata=None):
     method = msg["action"]
 
     if method == "create":
-        # TODO: start export from MH
         fragment_id = msg["fragment_id"]
-        print(f'TODO: start export from MH for fragment id {fragment_id}')
+        
+        export_dict = {
+            "Records": [{
+                "RecordId": fragment_id
+            }],
+            "ExportLocationId": config_parser.app_cfg["mediahaven"]["export_location_id"],
+            "Reason": "IIIF image processing.",
+        }
+        
+        mediahaven_client._post("exports", json=export_dict)
     elif method == "delete":
         visibility = 'public' if 'public' in msg['path'] else 'restricted'
         or_id = msg['OR-id']
