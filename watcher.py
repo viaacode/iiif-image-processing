@@ -53,9 +53,8 @@ if __name__ == "__main__":
             with zipfile.ZipFile(full_file_path, "r") as zip_ref:
                 zip_ref.extractall(workfolder)
         except zipfile.BadZipFile:
-            logger.debug('Invalid zip file %s', full_file_path)
+            logger.debug("Invalid zip file %s", full_file_path)
             continue
-
 
         essence_files_in_workfolder = [
             file
@@ -76,8 +75,12 @@ if __name__ == "__main__":
         file_to_transform_path = workfolder + "/" + file_to_transform
         sidecar_path = workfolder + "/" + metadata_files_in_workfolder[0]
 
+        # Calculate visibilty
+        visibility = "public" if "public" in path else "restricted"
+
         destination = get_iiif_file_destination(
-            file_to_transform_path, sidecar_path)
+            file_to_transform_path, sidecar_path, visibility
+        )
 
         my_env = environ.copy()
         my_env["PATH"] = f"/opt/iiif-image-processing/env/bin:{my_env['PATH']}"

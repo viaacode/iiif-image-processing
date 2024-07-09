@@ -47,6 +47,7 @@ def on_message(chan, method_frame, header_frame, body, userdata=None):
     method = msg["action"]
 
     if method == "create":
+        visibility = 'public' if 'public' in msg['path'] else 'restricted'
         fragment_id = msg["fragment_id"]
         
         export_dict = {
@@ -55,6 +56,8 @@ def on_message(chan, method_frame, header_frame, body, userdata=None):
             }],
             "ExportLocationId": config_parser.app_cfg["mediahaven"]["export_location_id"],
             "Reason": "IIIF image processing.",
+            "Combine": "Zip",
+            "DestinationPath": visibility
         }
         
         mediahaven_client._post("exports", json=export_dict)
