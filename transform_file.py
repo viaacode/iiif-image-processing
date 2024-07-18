@@ -43,9 +43,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--destination", type=str, default=None, help="Destination output file", required=False
     )
+    parser.add_argument(
+        "--max_size", type=str, default=None, help="Max width for the transformed image", required=False
+    )
     args = parser.parse_args()
     file_path = args.file_path
     destination = args.destination
+    max_size = args.max_size
 
     # Copy file and rename it to external_id.
     # File has to be copied so metadata can be added again later.
@@ -63,7 +67,16 @@ if __name__ == "__main__":
 
     # Resize file
     width, height = get_image_dimensions(file_path)
-    max_dimensions = None
+    if max_size is not None:
+        size_map = {
+            "small": 2000,
+            "medium": 4500,
+            "large": 10000,
+            "unlimited": None
+        }
+        max_dimensions = size_map.get(max_size, None)
+    else:
+        max_dimensions = None
     resize_params = get_resize_params(width, height, max_dimensions)
     file_transformer.resize(file_path, resize_params)
 

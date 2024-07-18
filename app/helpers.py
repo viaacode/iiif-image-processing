@@ -260,6 +260,16 @@ def get_iiif_file_destination(essence_file_path, sidecar_file_path, visibility):
 
     return destination
 
+def get_max_size_from_metadata(sidecar_file_path) -> str:
+    tree = ET.parse(sidecar_file_path)
+    root = tree.getroot()
+    
+    max_size = root.find(".//iiif_max_size")
+    if max_size is not None:
+        return str(max_size.text)
+    else:
+        return "unlimited"
+
 
 def check_pronom_id(file_path, expected_pronom_id):
     """Check if a file has the expected pronom id

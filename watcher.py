@@ -8,7 +8,7 @@ from pathlib import Path
 from os import walk, environ
 
 # Internal imports
-from app.helpers import get_iiif_file_destination, check_pronom_id
+from app.helpers import get_iiif_file_destination, check_pronom_id, get_max_size_from_metadata
 from viaa.observability import logging
 from viaa.configuration import ConfigParser
 
@@ -81,6 +81,8 @@ if __name__ == "__main__":
         destination = get_iiif_file_destination(
             file_to_transform_path, sidecar_path, visibility
         )
+        
+        max_size = get_max_size_from_metadata(sidecar_path)
 
         my_env = environ.copy()
         my_env["PATH"] = f"/opt/iiif-image-processing/env/bin:{my_env['PATH']}"
@@ -92,7 +94,8 @@ if __name__ == "__main__":
         subprocess.run(
             "python3 /opt/iiif-image-processing/transform_file.py"
             + f" --file_path {file_to_transform_path}"
-            + f" --destination {destination}",
+            + f" --destination {destination}"
+            + f" --max_size {max_size}",
             shell=True,
             check=True,
             env=my_env,
